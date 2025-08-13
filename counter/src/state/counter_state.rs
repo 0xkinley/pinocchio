@@ -6,7 +6,7 @@ use pinocchio::{
 
 use crate::{
     error::CounterError,
-    instructions::{InitializeMyStateV1IxData, IncrementIxData, DecrementIxData},
+    instructions::InitializeMyStateV1IxData,
     state::try_from_account_info_mut,
 };
 
@@ -55,16 +55,16 @@ impl CounterState {
         Ok(())
     }
 
-    pub fn increment(&mut self, ix_data: &IncrementIxData) -> ProgramResult {
+    pub fn increment(&mut self, increment_by: u64) -> ProgramResult {
         self.count = self.count
-            .checked_add(ix_data.increment_by)
+            .checked_add(increment_by)
             .ok_or(CounterError::Overflow)?;
         Ok(())
     }
 
-    pub fn decrement(&mut self, ix_data: &DecrementIxData) -> ProgramResult {
+    pub fn decrement(&mut self, decrement_by: u64) -> ProgramResult {
         self.count = self.count
-            .checked_sub(ix_data.decrement_by)
+            .checked_sub(decrement_by)
             .ok_or(CounterError::Underflow)?;
         Ok(())
     }
