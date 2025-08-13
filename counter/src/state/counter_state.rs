@@ -16,7 +16,6 @@ pub struct CounterState {
     pub is_initialized: u8,
     pub owner: Pubkey,
     pub count: u64,
-    pub data: [u8; 32],
     pub bump: u8,
 }
 
