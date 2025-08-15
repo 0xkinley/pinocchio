@@ -4,18 +4,20 @@ use pinocchio::{
     account_info::AccountInfo, program_error::ProgramError, pubkey::Pubkey, ProgramResult,
 };
 
+use bytemuck::Zeroable;
+
 use crate::{
     error::CounterError,
-    instructions::InitializeMyStateV1IxData,
+    instructions::InitializeCounterIxData,
     state::try_from_account_info_mut,
 };
 
 #[repr(C)]
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub struct CounterState {
-    pub is_initialized: u8,
-    pub owner: Pubkey,
+#[derive(Clone, Copy, Debug, PartialEq, Zeroable, shank::ShankAccount)]
+pub struct CounterState {    
     pub count: u64,
+    pub owner: Pubkey,
+    pub is_initialized: u8,    
     pub bump: u8,
 }
 
@@ -44,7 +46,7 @@ impl CounterState {
 
     pub fn initialize(
         counter_state_account: &AccountInfo,
-        ix_data: &InitializeMyStateV1IxData,
+        ix_data: &InitializeCounterIxData,
         bump: u8,
       ) -> ProgramResult{
         let counter_state = unsafe { try_from_account_info_mut::<CounterState>(counter_state_account) }?;
@@ -52,6 +54,7 @@ impl CounterState {
         counter_state.owner = ix_data.owner;
         counter_state.count = 0;
         counter_state.bump = bump;
+
         Ok(())
     }
 

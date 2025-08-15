@@ -18,19 +18,22 @@ use crate::{
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, shank::ShankType)]
-pub struct InitializeMyStateV1IxData {
+pub struct InitializeCounterIxData {
     pub owner: Pubkey
 }
 
-impl DataLen for InitializeMyStateV1IxData {
-    const LEN: usize = core::mem::size_of::<InitializeMyStateV1IxData>();
+impl DataLen for InitializeCounterIxData {
+    const LEN: usize = core::mem::size_of::<InitializeCounterIxData>();
 }
 
 pub fn process_initialize_counter(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
-    let [owner_acc, 
+    let [
+        owner_acc, 
         counter_state_acc, 
         sysvar_rent_acc, 
-        _system_program] = accounts else {
+        _system_program, 
+        _rest @ ..
+        ] = accounts else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
 
@@ -44,7 +47,7 @@ pub fn process_initialize_counter(accounts: &[AccountInfo], data: &[u8]) -> Prog
 
     let rent = Rent::from_account_info(sysvar_rent_acc)?;
 
-    let ix_data = unsafe { load_ix_data::<InitializeMyStateV1IxData>(data)? };
+    let ix_data = unsafe { load_ix_data::<InitializeCounterIxData>(data)? };
 
     if ix_data.owner.ne(owner_acc.key()) {
         return Err(CounterError::InvalidOwner.into());
@@ -52,6 +55,7 @@ pub fn process_initialize_counter(accounts: &[AccountInfo], data: &[u8]) -> Prog
 
 
     let seeds = &[CounterState::SEED.as_bytes(), &ix_data.owner];
+
     let (derived_my_state_pda, bump) = pubkey::find_program_address(seeds, &crate::ID);
     if derived_my_state_pda.ne(counter_state_acc.key()) {
         return Err(ProgramError::InvalidAccountOwner);

@@ -27,12 +27,21 @@ impl DataLen for DecrementIxData {
 }
 
 pub fn process_decrement_counter(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
-    let [owner_acc, counter_state_acc] = accounts else {
+    let [
+        owner_acc, 
+        counter_state_acc, 
+        _system_program, 
+        _rest @ ..
+        ] = accounts else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
 
     if !owner_acc.is_signer() {
         return Err(ProgramError::MissingRequiredSignature);
+    }
+
+    if !counter_state_acc.owner().eq(&crate::ID) {
+        return Err(CounterError::InvalidOwner.into());
     }
 
     let ix_data = unsafe { load_ix_data::<DecrementIxData>(data)? };
